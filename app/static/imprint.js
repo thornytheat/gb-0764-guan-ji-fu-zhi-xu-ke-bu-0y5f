@@ -47,4 +47,10 @@ bind(document.querySelector('#stamp'), async () => {
   mark.textContent = '已签发';
   note.textContent = record.reused ? '已取回原凭证' : '复制许可凭证已落印';
 });
+bind(document.querySelector('#archive'), async form => {
+  const selected = form.querySelector('#archive-volume').value;
+  const result = await send(`/api/volumes/${selected}/archive`, {});
+  note.textContent = result.reused ? '该卷已归档，取回原记录，原指纹未改动' : '在线证据已清理，凭证仍可下载复验';
+  location.reload();
+});
 document.querySelector('#print-slip')?.addEventListener('click', () => window.print());

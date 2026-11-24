@@ -13,6 +13,7 @@
 | M5 签发请求对账 | 复算许可页与有效额度 | `GET/POST /api/balance` | `app/register/balance.py` | `tests/test_balance.py` |
 | M6 批次留档复跑 | 取回原归档快照 | `POST /api/volumes` | `app/vault/record.py` `app/vault/database.py` | `tests/test_vault.py` |
 | M7 许可证据签发 | 签发可复验凭证 | `POST /api/volumes/{id}/stamp` | `app/certificate/slip.py` | `tests/test_certificate.py` |
+| M8 在线库归档清理 | 清理旧卷在线证据并保留可验凭证、年度额度账 | `POST /api/volumes/{id}/archive` `GET /api/archives` | `app/vault/archive.py` `app/vault/database.py` | `tests/test_archive.py` |
 
 ## 陷阱登记
 
@@ -27,5 +28,9 @@
 | TRAP-19 | 专属和公开同日适用 | 高修订公开版覆盖专属 | 先比较授权范围 | `app/licenses/terms.py` | `tests/test_licenses.py::test_special_beats_public_high_revision` |
 | TRAP-23 | 请求在截止日 | 到期条款多算一天 | 左闭右开 | `app/licenses/terms.py` | `tests/test_licenses.py::test_closed_at_valid_until` |
 | TRAP-25 | 两版时间重叠 | 按列表顺序选版 | 高修订优先，同级冲突待证 | `app/licenses/decide.py` | `tests/test_licenses.py::test_overlapping_versions_and_tie` |
+| TRAP-26 | 归档后再落印 | 证据已清空，无法重算凭证 | 已签发直接取回 `slips` 原指纹，不触碰在线证据 | `app/certificate/slip.py` | `tests/test_archive.py::test_same_incoming_does_not_revive_evidence_or_new_run` |
+| TRAP-27 | 归档重试/并发 | 重复清理或写入多份归档 | 快照与清理同一事务，`INSERT ... DO NOTHING` 幂等，重试取回原记录 | `app/vault/archive.py` | `tests/test_archive.py::test_concurrent_archive_commits_once` |
+| TRAP-28 | 跨卷汇总额度 | 多卷占用之和去减单卷限额出现负剩余 | 限额按卷宗窗口独立，按 占用+剩余=限额×卷宗数 对账 | `app/vault/archive.py` | `tests/test_archive.py::test_archived_annual_ledger_reconciles` |
+| TRAP-29 | 旧库列约束迁移 | 只重建 volumes 导致 slips 外键指向旧表 | 关外键事务内连同 slips 一起重建 | `app/vault/database.py` | `tests/test_archive.py::test_legacy_database_migrates_and_keeps_evidence` |
 
 58 申请页 = 32 许可页 + 18 拒绝页 + 8 待证页。C01 已许可 6 页，R01 归还 6 页，因此有效占用 26 页。申请页计在订单内部去重，各不同订单独立计数。

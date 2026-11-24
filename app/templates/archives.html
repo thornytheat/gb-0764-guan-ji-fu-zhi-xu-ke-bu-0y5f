@@ -1,0 +1,7 @@
+<div class="folios"><article class="panel"><h3>归档年度额度账</h3>
+<div class="shelf"><table><thead><tr><th>年度</th><th>额度池</th><th>单卷限额</th><th>卷宗</th><th>毛占用</th><th>有效占用</th><th>剩余合计</th><th>对账</th></tr></thead><tbody>
+{% for book in archive_book.ledger %}<tr><td>{{ book.year }}</td><td>{{ book.pool }}</td><td>{{ book.limit }}</td><td>{{ book.volume_count }}</td><td>{{ book.gross }}</td><td>{{ book.used }}</td><td>{{ book.available }}</td><td>{{ '相符' if book.reconciled else '待复核' }}</td></tr>{% else %}<tr><td colspan="8">尚无已归档卷宗。</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="state-note">额度池限额按卷宗窗口独立生效：有效占用 + 剩余合计 = 单卷限额 × 卷宗数；有效占用为各归档卷快照内实际许可减撤销后的占用。</p></article>
+<aside class="panel"><h3>已归档卷宗</h3>
+{% for item in volumes if item.archived %}<details><summary>{{ item.run_id[:14] }} · {{ item.totals.effective }} 页</summary><p><a href="{{ url_for('desk.folio',view='stamp',run=item.run_id,sample=sample) }}">下载同一份凭证复验</a></p><p class="imprint-small">原指纹不可变，归档与重试均不重算。</p></details>{% else %}<p>暂无已归档卷宗；在签发页落印后可归档。</p>{% endfor %}</aside></div>

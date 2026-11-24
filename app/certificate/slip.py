@@ -6,25 +6,34 @@ from app.vault.record import encode, volume
 
 
 def stamp(vault, run):
-    report = volume(vault,run)
+    with vault.session() as conn:
+        existing = conn.execute('SELECT digest FROM slips WHERE id=?', (run,)).fetchone()
+    if existing is not None:
+        # 已落印（含已归档）：原指纹不可变，直接取回，不依赖在线证据。
+        return {'run_id': run, 'imprint': existing[0], 'reused': True}
+    report = volume(vault, run)
     stages = report['stages']
-    document = {'document':'馆际复制签发凭证','manifest':report['manifest'],
-                'accounting':stages['balance'],'requests':stages['pages']['copies'],
-                'revocations':stages['pages']['reversals'],'isolated':stages['intake']['exceptions'],
-                'suppressions':stages['intake']['duplicates'],'resolutions':stages['licenses']['verdicts']}
+    if stages is None:
+        raise DeskError('ARCHIVE_STATE', 409)
+    document = {'document': '馆际复制签发凭证', 'manifest': report['manifest'],
+                'accounting': stages['balance'], 'requests': stages['pages']['copies'],
+                'revocations': stages['pages']['reversals'], 'isolated': stages['intake']['exceptions'],
+                'suppressions': stages['intake']['duplicates'], 'resolutions': stages['licenses']['verdicts']}
     body = encode(document)
     imprint = sha256(body.encode()).hexdigest()
     with vault.session() as conn:
-        new = conn.execute('INSERT INTO slips VALUES (?,?,?) ON CONFLICT(id) DO NOTHING',(run,imprint,body)).rowcount
-        signed = conn.execute('SELECT digest FROM slips WHERE id=?',(run,)).fetchone()[0]
-    return {'run_id':run,'imprint':signed,'reused':not bool(new)}
+        new = conn.execute('INSERT INTO slips VALUES (?,?,?) ON CONFLICT(id) DO NOTHING',
+                           (run, imprint, body)).rowcount
+        signed = conn.execute('SELECT digest FROM slips WHERE id=?', (run,)).fetchone()[0]
+    return {'run_id': run, 'imprint': signed, 'reused': not bool(new)}
 
 
 def certificate(vault, run):
-    volume(vault,run)
+    volume(vault, run)
     with vault.session() as conn:
-        record = conn.execute('SELECT digest,body FROM slips WHERE id=?',(run,)).fetchone()
+        record = conn.execute('SELECT digest,body FROM slips WHERE id=?', (run,)).fetchone()
     if record is None:
-        raise DeskError('DRAFT_ONLY',409)
+        raise DeskError('DRAFT_ONLY', 409)
     fingerprint, body = record
-    return {'imprint':fingerprint,'verified':sha256(body.encode()).hexdigest()==fingerprint,'document':json.loads(body)}
+    return {'imprint': fingerprint, 'verified': sha256(body.encode()).hexdigest() == fingerprint,
+            'document': json.loads(body)}

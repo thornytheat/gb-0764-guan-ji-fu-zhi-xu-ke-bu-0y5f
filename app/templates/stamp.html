@@ -1,4 +1,10 @@
 <div class="folios"><article class="panel print-slip"><h3>复制许可签发凭证</h3>
-{% if volumes %}<form id="stamp"><label for="volume">许可卷号</label><select id="volume">{% for item in volumes %}<option value="{{ item.run_id }}" {{ 'selected' if item.run_id==active }}>{{ item.run_id[:14] }} · {{ item.totals.effective }} 页</option>{% endfor %}</select><button>落印签发</button></form>
-<output id="imprint-value"></output><p><a id="certificate" hidden>下载许可凭证</a></p>{% else %}<p>请先复算归卷。</p>{% endif %}</article>
-<aside class="panel"><h3>签发联</h3><div class="imprint" id="paper-stamp">待盖印</div><button class="print" type="button" id="print-slip">打印本页</button></aside></div>
+{% if volumes %}<form id="stamp"><label for="volume">许可卷号</label><select id="volume">{% for item in volumes %}<option value="{{ item.run_id }}" {{ 'selected' if item.run_id==active }}>{{ item.run_id[:14] }} · {{ item.totals.effective }} 页 · {{ '已归档' if item.archived else ('已落印可归档' if item.stamped else '草稿不可归档') }}</option>{% endfor %}</select><button>落印签发</button></form>
+<output id="imprint-value"></output><p><a id="certificate" hidden>下载许可凭证</a></p>{% else %}<p>请先复算归卷。</p>{% endif %}
+</article>
+<aside class="panel"><h3>在线库清理</h3>
+{% if volumes %}<form id="archive"><label for="archive-volume">归档卷号</label><select id="archive-volume">{% for item in volumes %}<option value="{{ item.run_id }}" {{ 'selected' if item.run_id==active }}>{{ item.run_id[:14] }} · {{ '已归档' if item.archived else ('可归档' if item.stamped else '未签发') }}</option>{% endfor %}</select><button type="submit">归档并清理在线证据</button></form>
+<output id="archive-value"></output>
+<p class="state-note">状态：<span class="tag tag-archived">已归档</span> 凭证可下载复验；<span class="tag tag-ready">已落印</span> 可归档；<span class="tag tag-draft">草稿</span> 须先签发。</p>
+{% else %}<p>请先复算归卷。</p>{% endif %}
+<div class="imprint" id="paper-stamp">待盖印</div><button class="print" type="button" id="print-slip">打印本页</button></aside></div>

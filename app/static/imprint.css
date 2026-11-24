@@ -4,6 +4,13 @@
 .margin-notes dt {color:var(--muted)}
 .margin-notes dd {margin:0;font-family:var(--font-num);text-align:right}
 #imprint-value {display:block;font-family:var(--font-num);margin-top:10px}
+.tag {display:inline-block;padding:1px 8px;border:1px solid var(--line);border-radius:2px;font-size:12px;font-weight:650;white-space:nowrap}
+.tag-archived {color:var(--stamp);border-color:var(--stamp)}
+.tag-ready {color:var(--accent);border-color:var(--accent)}
+.tag-draft {color:var(--muted)}
+.state-note {color:var(--muted);font-size:13px;margin-top:12px}
+.imprint-small {font-family:var(--font-num);font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+#archive-value {display:block;font-family:var(--font-num);margin-top:10px;color:var(--stamp)}
 @media print {
   :root {--ink:#000;--accent:#000;--muted:#000;--line:#777;--bg:#fff;--page:#fff;--stamp:#000}
   header,nav,footer,button,form,#certificate {display:none !important}
